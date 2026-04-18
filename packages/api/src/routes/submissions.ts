@@ -6,27 +6,22 @@ import axios from 'axios';
 const router = Router();
 
 // POST /api/submissions  — submit a new plant discovery
-router.post('/', async (req, res) => {
+router.post('/', async (req, res): Promise<void> => {
   const { user_id, plant_name, description, images } = req.body;
 
-  // Ask Claude to enhance the user's draft description
   const aiRes = await axios.post(
-    'https://api.anthropic.com/v1/messages',
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
     {
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 600,
-      messages: [{
-        role: 'user',
-        content: `A community botanist has submitted this description of a plant called
-'${plant_name}': "${description}". Expand and improve this description
-in the style of a magical botanical field guide. Keep their observations
-but add scientific context and fantasy flavour. Max 150 words.`
+      contents: [{
+        parts: [{ text: `A community botanist submitted this description of a plant called
+'${plant_name}': "${description}". Expand and improve this in the style
+of a magical botanical field guide. Keep their observations but add
+scientific context and fantasy flavour. Max 150 words.` }]
       }]
-    },
-    { headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' } }
+    }
   );
 
-  const ai_analysis = aiRes.data.content[0].text;
+  const ai_analysis = aiRes.data.candidates[0].content.parts[0].text;
 
   const { data, error } = await supabase
     .from('plant_submissions')
@@ -34,19 +29,18 @@ but add scientific context and fantasy flavour. Max 150 words.`
     .select()
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { res.status(500).json({ error: error.message }); return; }
   res.status(201).json(data);
 });
 
-// GET /api/submissions?user_id=xxx  — get user's submissions
-router.get('/', async (req, res) => {
+router.get('/', async (req, res): Promise<void> => {
   const { user_id } = req.query;
   const { data, error } = await supabase
     .from('plant_submissions')
     .select('*')
     .eq('user_id', user_id)
     .order('submitted_at', { ascending: false });
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { res.status(500).json({ error: error.message }); return; }
   res.json(data);
 });
 
