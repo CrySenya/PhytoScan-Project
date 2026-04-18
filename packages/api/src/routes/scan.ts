@@ -1,4 +1,3 @@
-// Receives photo and sends to Plant.id for identification
 import { Router } from 'express';
 import axios from 'axios';
 
@@ -6,50 +5,48 @@ const router = Router();
 
 // POST /api/scan  — body: { image: 'base64string' }
 router.post('/', async (req, res) => {
-  const { image } = req.body;
+  const { image } = req.body as { image: string };
   if (!image) return res.status(400).json({ error: 'No image provided' });
 
   try {
-    // ── Step 1: Identify the plant with Plant.id ─────────────────────────
-    const plantIdResponse = await axios.post(
-      'https://api.plant.id/v2/identify',
-      { images: [image], plant_details: ['common_names', 'taxonomy', 'wiki_description'] },
-      { headers: { 'Api-Key': process.env.PLANTID_API_KEY } }
+    // Step 1: Identify plant with iNaturalist
+    const buffer     = Buffer.from(image, 'base64');
+    const FormData   = require('form-data');
+    const form       = new FormData();
+    form.append('image', buffer, { filename: 'plant.jpg', contentType: 'image/jpeg' });
+
+    const plantRes = await axios.post(
+      'https://api.inaturalist.org/v1/computervision/score_image',
+      form,
+      { headers: { ...form.getHeaders() } }
     );
 
-    const topMatch    = plantIdResponse.data.suggestions[0];
-    const plantName   = topMatch.plant_name;
-    const confidence  = topMatch.probability;
-    const commonNames = topMatch.plant_details?.common_names || [];
+    const topMatch  = plantRes.data.results[0];
+    const plantName = topMatch.taxon.preferred_common_name || topMatch.taxon.name;
+    const confidence = topMatch.combined_score;
 
-    // ── Step 2: Ask Claude for a deep botanical description ───────────────
-    const claudeResponse = await axios.post(
-      'https://api.anthropic.com/v1/messages',
+    // Step 2: Generate fantasy description with Gemini
+    const geminiRes = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
-        model:      'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: `You are a botanical scholar writing entries for a traveller's
-field guide in a fantastical world where plants have magical properties.
-Write a detailed entry for: ${plantName} (also known as ${commonNames.join(', ')}).
-Include: 1) What the plant looks like, 2) Where it grows, 3) Its real-world
-medicinal or ecological uses written as if they are magical properties,
-4) A short piece of lore a traveller might tell about this plant.
-Keep it educational but enchanting. About 200 words.`
+        contents: [{
+          parts: [{ text: `You are a botanical scholar writing entries for a
+traveller's field guide in a fantastical world where plants have magical
+properties. Write a detailed entry for: ${plantName}.
+Include: 1) What it looks like, 2) Where it grows, 3) Its real-world
+uses written as magical properties, 4) A short traveller's lore.
+Keep it educational but enchanting. About 200 words.` }]
         }]
-      },
-      { headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' } }
+      }
     );
 
-    const fantasyDescription = claudeResponse.data.content[0].text;
+    const fantasyDescription = geminiRes.data.candidates[0].content.parts[0].text;
 
-    // ── Step 3: Return everything to the app ─────────────────────────────
+    // Step 3: Return result to the app
     res.json({
-      plant_name:    plantName,
-      common_names:  commonNames,
-      confidence:    confidence,
-      fantasy_lore:  fantasyDescription,
+      plant_name:   plantName,
+      confidence:   confidence,
+      fantasy_lore: fantasyDescription,
     });
 
   } catch (err: any) {
