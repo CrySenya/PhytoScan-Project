@@ -6,7 +6,8 @@
     "declarationMap": true,
     "sourceMap": true,
     "ignoreDeprecations": "6.0",
-    "noEmit": false
+    "noEmit": false,
+    "strict": false
   },
   "include": ["src", "types"],
   "exclude": ["node_modules"]

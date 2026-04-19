@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "PhytoScan",
+    "slug": "phytoscan",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F1F8E9"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F1F8E9"
+      },
+      "package": "com.sirpawn.phytoscanproject"
+    },
+    "ios": {
+      "bundleIdentifier": "com.sirpawn.phytoscanproject",
+      "supportsTablet": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3761b033-ed32-4fbc-8649-e50560559c8d"
+      }
+    }
+  }
+}
