@@ -12,38 +12,64 @@ export default function SignupPage() {
   const [done,     setDone]     = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true); setError('');
-  
-  const { data, error } = await supabase.auth.signUp({
-    email, password,
-    options: { data: { name: username } },
-  });
-  
-  if (error) { setError(error.message); setLoading(false); return; }
-  
-  if (data.user) {
-    const { error: profileError } = await supabase
-      .from('user_profiles')
-      .insert({
-        id:                 data.user.id,
-        username:           username,
-        xp_points:          0,
-        rank:               'Seedling',
-        role:               'user',
-        is_verified_modder: false,
-        discoveries:        0,
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name: username },
+          emailRedirectTo: undefined,
+        },
       });
-    
-    if (profileError) {
-      setError('Account created but profile setup failed: ' + profileError.message);
-      setLoading(false);
-      return;
+
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (data?.user) {
+        try {
+          await supabase.from('user_profiles').upsert({
+            id:                 data.user.id,
+            username:           username || email.split('@')[0],
+            xp_points:          0,
+            rank:               'Seedling',
+            role:               'user',
+            is_verified_modder: false,
+            discoveries:        0,
+          }, { onConflict: 'id' });
+        } catch (profileErr) {
+          console.log('Profile creation skipped:', profileErr);
+        }
+        setDone(true);
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Unexpected error. Please try again.');
     }
-  }
-  
-  setDone(true);
-};
+
+    setLoading(false);
+  };
+
+  if (done) return (
+    <div className='min-h-screen flex items-center justify-center bg-green-50 px-4'>
+      <div className='bg-white rounded-3xl shadow-lg p-8 w-full max-w-md text-center'>
+        <div className='text-5xl mb-4'>🌱</div>
+        <h2 className='text-2xl font-bold text-green-900 mb-2'>Account created!</h2>
+        <p className='text-gray-600 mb-6'>Welcome to PhytoScan.</p>
+        <Link href='/login'
+          className='inline-block bg-green-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-800 transition'>
+          Go to Login
+        </Link>
+      </div>
+    </div>
+  );
 
   return (
     <div className='min-h-screen flex items-center justify-center bg-green-50 px-4'>
@@ -52,7 +78,13 @@ export default function SignupPage() {
           <h1 className='text-3xl font-bold text-green-900'>🌿 Join PhytoScan</h1>
           <p className='text-green-700 mt-1'>Start your botanical journey</p>
         </div>
-        {error && <div className='bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 mb-4 text-sm'>{error}</div>}
+
+        {error && (
+          <div className='bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 mb-4 text-sm'>
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSignup} className='space-y-4'>
           <div>
             <label className='block text-sm font-semibold text-gray-700 mb-1'>Username</label>
@@ -77,8 +109,10 @@ export default function SignupPage() {
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
+
         <p className='text-center text-sm text-gray-600 mt-6'>
-          Already have an account? <Link href='/login' className='text-green-700 font-bold hover:underline'>Sign in</Link>
+          Already have an account?{' '}
+          <Link href='/login' className='text-green-700 font-bold hover:underline'>Sign in</Link>
         </p>
       </div>
     </div>
