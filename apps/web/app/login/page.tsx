@@ -46,10 +46,10 @@ export default function LoginPage() {
         <form onSubmit={handleEmail} className='space-y-4'>
           <input type='email' placeholder='Email address' value={email}
             onChange={e => setEmail(e.target.value)} required
-            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-green-50' />
+            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-gray-900' />
           <input type='password' placeholder='Password' value={password}
             onChange={e => setPassword(e.target.value)} required
-            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-green-50' />
+            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-gray-900' />
           <button type='submit' disabled={loading}
             className='w-full py-3 bg-green-700 text-white rounded-xl font-semibold hover:bg-green-800 transition disabled:opacity-50'>
             {loading ? 'Signing in...' : 'Sign In'}
