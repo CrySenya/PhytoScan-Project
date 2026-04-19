@@ -1,65 +1,75 @@
-import Image from "next/image";
+'use client';
+import { useEffect, useState } from 'react';
+import { getPlants } from '../lib/api';
+import PlantCard from '../components/PlantCard';
+import { useAuth } from '../lib/AuthContext';
+import { useRouter } from 'next/navigation';
+import { getRank } from '../lib/ranks';
 
-export default function Home() {
+export default function HomePage() {
+  const { user, profile, loading } = useAuth();
+  const router = useRouter();
+  const [plants,  setPlants]  = useState<any[]>([]);
+  const [search,  setSearch]  = useState('');
+  const [fetching,setFetching]= useState(true);
+  const rank = profile ? getRank(profile.xp_points) : null;
+
+  useEffect(() => {
+    if (!loading && !user) router.push('/login');
+  }, [user, loading]);
+
+  useEffect(() => {
+    getPlants().then(setPlants).finally(() => setFetching(false));
+  }, []);
+
+  const handleSearch = async () => {
+    setFetching(true);
+    const data = await getPlants(search || undefined);
+    setPlants(data);
+    setFetching(false);
+  };
+
+  if (loading) return <div className='flex justify-center items-center min-h-screen'><div className='text-green-700 text-lg'>Loading...</div></div>;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className='max-w-6xl mx-auto px-4 py-8'>
+      {profile && rank && (
+        <div className='bg-white rounded-2xl p-5 mb-8 flex items-center gap-4 shadow-sm border border-green-100'>
+          <div className='w-14 h-14 rounded-full bg-green-700 flex items-center justify-center text-2xl font-bold text-white'>
+            {profile.username?.[0]?.toUpperCase()}
+          </div>
+          <div>
+            <p className='font-bold text-green-900 text-lg'>Welcome back, {profile.username}!</p>
+            <div className='flex items-center gap-2 mt-1'>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${rank.color}`}>{rank.emoji} {rank.name}</span>
+              <span className='text-xs text-gray-500'>{profile.xp_points} XP</span>
+              {profile.is_verified_modder && <span className='text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-bold'>✓ Verified Modder</span>}
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      )}
+
+      <div className='mb-8'>
+        <h2 className='text-2xl font-bold text-green-900 mb-4'>🔍 Search Plants</h2>
+        <div className='flex gap-2'>
+          <input type='text' placeholder='Search by name, family, or habitat...'
+            value={search} onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+            className='flex-1 px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white' />
+          <button onClick={handleSearch} className='px-6 py-3 bg-green-700 text-white rounded-xl font-semibold hover:bg-green-800 transition'>Search</button>
         </div>
-      </main>
+      </div>
+
+      <h2 className='text-2xl font-bold text-green-900 mb-4'>🌿 Plant Directory</h2>
+      {fetching ? (
+        <div className='text-center text-green-600 py-20'>Loading plants...</div>
+      ) : plants.length === 0 ? (
+        <div className='text-center text-green-600 py-20'>No plants found.</div>
+      ) : (
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5'>
+          {plants.map(p => <PlantCard key={p.id} {...p} />)}
+        </div>
+      )}
     </div>
   );
 }
