@@ -46,13 +46,13 @@ export default function SignupPage() {
         <form onSubmit={handleSignup} className='space-y-4'>
           <input type='text' placeholder='Username' value={username}
             onChange={e => setUsername(e.target.value)} required
-            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-gray-900' />
+            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-gray-900 placeholder-gray-400' />
           <input type='email' placeholder='Email address' value={email}
             onChange={e => setEmail(e.target.value)} required
-            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-gray-900' />
+            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-gray-900 placeholder-gray-400' />
           <input type='password' placeholder='Password (min 6 characters)' value={password}
             onChange={e => setPassword(e.target.value)} required minLength={6}
-            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-gray-900' />
+            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-gray-900 placeholder-gray-400' />
           <button type='submit' disabled={loading}
             className='w-full py-3 bg-green-700 text-white rounded-xl font-semibold hover:bg-green-800 transition disabled:opacity-50'>
             {loading ? 'Creating account...' : 'Create Account'}
