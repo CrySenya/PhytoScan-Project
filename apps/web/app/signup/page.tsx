@@ -12,26 +12,38 @@ export default function SignupPage() {
   const [done,     setDone]     = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true); setError('');
-    const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { name: username } },
-    });
-    if (error) { setError(error.message); setLoading(false); return; }
-    setDone(true);
-  };
-
-  if (done) return (
-    <div className='min-h-screen flex items-center justify-center bg-green-50 px-4'>
-      <div className='bg-white rounded-3xl shadow-lg p-8 w-full max-w-md text-center'>
-        <div className='text-5xl mb-4'>🌱</div>
-        <h2 className='text-2xl font-bold text-green-900 mb-2'>Account created!</h2>
-        <p className='text-gray-600'>Welcome to PhytoScan.</p>
-        <Link href='/login' className='mt-6 inline-block bg-green-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-800 transition'>Go to Login</Link>
-      </div>
-    </div>
-  );
+  e.preventDefault();
+  setLoading(true); setError('');
+  
+  const { data, error } = await supabase.auth.signUp({
+    email, password,
+    options: { data: { name: username } },
+  });
+  
+  if (error) { setError(error.message); setLoading(false); return; }
+  
+  if (data.user) {
+    const { error: profileError } = await supabase
+      .from('user_profiles')
+      .insert({
+        id:                 data.user.id,
+        username:           username,
+        xp_points:          0,
+        rank:               'Seedling',
+        role:               'user',
+        is_verified_modder: false,
+        discoveries:        0,
+      });
+    
+    if (profileError) {
+      setError('Account created but profile setup failed: ' + profileError.message);
+      setLoading(false);
+      return;
+    }
+  }
+  
+  setDone(true);
+};
 
   return (
     <div className='min-h-screen flex items-center justify-center bg-green-50 px-4'>
