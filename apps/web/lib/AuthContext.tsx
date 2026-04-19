@@ -1,47 +1,51 @@
 'use client';
-import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, Profile } from './supabase';
-import type { User } from '@supabase/supabase-js';
+import { createContext, useContext, useState } from 'react';
+
+const mockProfile = {
+  id: 'demo-user-123',
+  username: 'PhytoAdmin',
+  avatar_url: null,
+  bio: 'Demo account for PhytoScan',
+  xp_points: 1500,
+  rank: 'Sage',
+  role: 'superadmin' as const,
+  is_verified_modder: true,
+  discoveries: 12,
+  favorite_plant: 'Monstera deliciosa',
+  created_at: new Date().toISOString(),
+};
+
+const mockUser = { id: 'demo-user-123', email: 'demo@phytoscan.app' };
 
 interface AuthCtx {
-  user:    User | null;
-  profile: Profile | null;
+  user: any;
+  profile: any;
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
-const Ctx = createContext<AuthCtx>({ user: null, profile: null, loading: true, signOut: async () => {}, refreshProfile: async () => {} });
+const Ctx = createContext<AuthCtx>({
+  user: mockUser,
+  profile: mockProfile,
+  loading: false,
+  signOut: async () => {},
+  refreshProfile: async () => {},
+});
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user,    setUser]    = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user]    = useState(mockUser);
+  const [profile] = useState(mockProfile);
 
-  const fetchProfile = async (uid: string) => {
-    const { data } = await supabase.from('user_profiles').select('*').eq('id', uid).single();
-    if (data) setProfile(data as Profile);
+  const signOut = async () => {
+    window.location.href = '/login';
   };
 
-  const refreshProfile = async () => { if (user) await fetchProfile(user.id); };
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-      setLoading(false);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-      else setProfile(null);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const signOut = async () => { await supabase.auth.signOut(); setUser(null); setProfile(null); };
-
-  return <Ctx.Provider value={{ user, profile, loading, signOut, refreshProfile }}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={{ user, profile, loading: false, signOut, refreshProfile: async () => {} }}>
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export const useAuth = () => useContext(Ctx);

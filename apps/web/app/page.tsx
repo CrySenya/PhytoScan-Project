@@ -15,10 +15,6 @@ export default function HomePage() {
   const rank = profile ? getRank(profile.xp_points) : null;
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [user, loading]);
-
-  useEffect(() => {
     getPlants().then(setPlants).finally(() => setFetching(false));
   }, []);
 
