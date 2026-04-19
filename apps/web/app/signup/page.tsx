@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignupPage() {
@@ -11,7 +10,6 @@ export default function SignupPage() {
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
   const [done,     setDone]     = useState(false);
-  const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +26,9 @@ export default function SignupPage() {
     <div className='min-h-screen flex items-center justify-center bg-green-50 px-4'>
       <div className='bg-white rounded-3xl shadow-lg p-8 w-full max-w-md text-center'>
         <div className='text-5xl mb-4'>🌱</div>
-        <h2 className='text-2xl font-bold text-green-900 mb-2'>Check your email!</h2>
-        <p className='text-gray-600'>We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account.</p>
-        <Link href='/login' className='mt-6 inline-block text-green-700 font-semibold hover:underline'>Back to login</Link>
+        <h2 className='text-2xl font-bold text-green-900 mb-2'>Account created!</h2>
+        <p className='text-gray-600'>Welcome to PhytoScan.</p>
+        <Link href='/login' className='mt-6 inline-block bg-green-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-800 transition'>Go to Login</Link>
       </div>
     </div>
   );
@@ -42,24 +40,33 @@ export default function SignupPage() {
           <h1 className='text-3xl font-bold text-green-900'>🌿 Join PhytoScan</h1>
           <p className='text-green-700 mt-1'>Start your botanical journey</p>
         </div>
-        {error && <div className='bg-red-50 text-red-700 rounded-xl p-3 mb-4 text-sm'>{error}</div>}
+        {error && <div className='bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 mb-4 text-sm'>{error}</div>}
         <form onSubmit={handleSignup} className='space-y-4'>
-          <input type='text' placeholder='Username' value={username}
-            onChange={e => setUsername(e.target.value)} required
-            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-gray-900 placeholder-gray-400' />
-          <input type='email' placeholder='Email address' value={email}
-            onChange={e => setEmail(e.target.value)} required
-            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-gray-900 placeholder-gray-400' />
-          <input type='password' placeholder='Password (min 6 characters)' value={password}
-            onChange={e => setPassword(e.target.value)} required minLength={6}
-            className='w-full px-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-gray-900 placeholder-gray-400' />
+          <div>
+            <label className='block text-sm font-semibold text-gray-700 mb-1'>Username</label>
+            <input type='text' placeholder='Enter your username' value={username}
+              onChange={e => setUsername(e.target.value)} required
+              className='w-full px-4 py-3 rounded-xl border-2 border-green-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:border-green-600' />
+          </div>
+          <div>
+            <label className='block text-sm font-semibold text-gray-700 mb-1'>Email</label>
+            <input type='email' placeholder='Enter your email' value={email}
+              onChange={e => setEmail(e.target.value)} required
+              className='w-full px-4 py-3 rounded-xl border-2 border-green-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:border-green-600' />
+          </div>
+          <div>
+            <label className='block text-sm font-semibold text-gray-700 mb-1'>Password</label>
+            <input type='password' placeholder='Minimum 6 characters' value={password}
+              onChange={e => setPassword(e.target.value)} required minLength={6}
+              className='w-full px-4 py-3 rounded-xl border-2 border-green-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:border-green-600' />
+          </div>
           <button type='submit' disabled={loading}
-            className='w-full py-3 bg-green-700 text-white rounded-xl font-semibold hover:bg-green-800 transition disabled:opacity-50'>
+            className='w-full py-3 bg-green-700 text-white rounded-xl font-bold text-base hover:bg-green-800 transition disabled:opacity-50'>
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
-        <p className='text-center text-sm text-gray-500 mt-6'>
-          Already have an account? <Link href='/login' className='text-green-700 font-semibold hover:underline'>Sign in</Link>
+        <p className='text-center text-sm text-gray-600 mt-6'>
+          Already have an account? <Link href='/login' className='text-green-700 font-bold hover:underline'>Sign in</Link>
         </p>
       </div>
     </div>
